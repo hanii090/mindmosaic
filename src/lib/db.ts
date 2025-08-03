@@ -266,6 +266,9 @@ export async function logUserFeedback(feedback: {
   rating: number;
   comments?: string;
   helpful: boolean;
+  supportive?: boolean;
+  accurate?: boolean;
+  emotionalSupport?: string;
   timestamp: Date;
 }): Promise<void> {
   try {
@@ -277,6 +280,9 @@ export async function logUserFeedback(feedback: {
         rating: feedback.rating,
         comments: feedback.comments || null,
         helpful: feedback.helpful,
+        supportive: feedback.supportive || false,
+        accurate: feedback.accurate || false,
+        emotional_support: feedback.emotionalSupport || 'neutral',
         timestamp: feedback.timestamp.toISOString()
       });
 
@@ -285,7 +291,7 @@ export async function logUserFeedback(feedback: {
       throw new Error(`Failed to log user feedback: ${error.message}`);
     }
     
-    console.log('User feedback logged successfully');
+    console.log('Enhanced user feedback logged successfully');
   } catch (error) {
     console.error('Error logging user feedback:', error);
     throw new Error('Failed to log user feedback');

@@ -2,7 +2,7 @@
 
 import { useEffect, useState, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
-import { Brain, Heart, ArrowLeft, RefreshCw } from 'lucide-react';
+import { Brain, Heart, ArrowLeft, RefreshCw, Save, BookOpen } from 'lucide-react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
@@ -149,11 +149,12 @@ function FeedbackSection({ sessionId }: { sessionId: string }) {
 }
 
 function ResultContent() {
+  const [resultData, setResultData] = useState<ResultData | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
+  const [sessionSaved, setSessionSaved] = useState(false);
   const searchParams = useSearchParams();
   const router = useRouter();
-  const [resultData, setResultData] = useState<ResultData | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState('');
 
   useEffect(() => {
     const sessionId = searchParams.get('session');
@@ -191,6 +192,42 @@ function ResultContent() {
     sessionStorage.removeItem('mindmosaic_session');
     
     router.push('/form');
+  };
+
+  const handleSaveSession = async () => {
+    if (!resultData || isSaving || sessionSaved) return;
+    
+    setIsSaving(true);
+    try {
+      // Get user input from sessionStorage or other source
+      const userInput = sessionStorage.getItem('mindmosaic_user_input') || 'Session input';
+      
+      const sessionToSave = {
+        sessionId: resultData.sessionId,
+        timestamp: new Date().toISOString(),
+        userInput,
+        detectedEmotion: resultData.emotionAnalysis?.dominantEmotion || 'neutral',
+        aiResponse: {
+          mainMessage: resultData.aiResponse?.mainMessage || '',
+          suggestions: resultData.aiResponse?.suggestions || []
+        }
+      };
+
+      // Get existing saved sessions
+      const existingSessions = JSON.parse(localStorage.getItem('mindmosaic_saved_sessions') || '[]');
+      
+      // Add new session to the beginning and keep only last 3
+      const updatedSessions = [sessionToSave, ...existingSessions.slice(0, 2)];
+      
+      // Save to localStorage
+      localStorage.setItem('mindmosaic_saved_sessions', JSON.stringify(updatedSessions));
+      
+      setSessionSaved(true);
+    } catch (error) {
+      console.error('Error saving session:', error);
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   if (isLoading) {
@@ -382,12 +419,49 @@ function ResultContent() {
             {/* Actions */}
             <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mt-12">
               <Button
+                onClick={handleSaveSession}
+                disabled={isSaving || sessionSaved}
+                variant={sessionSaved ? "success" : "secondary"}
+                size="lg"
+                className="text-lg px-8 py-6"
+              >
+                {isSaving ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin mr-2" />
+                    Saving...
+                  </>
+                ) : sessionSaved ? (
+                  <>
+                    <Heart className="mr-2 h-5 w-5" />
+                    Session Saved!
+                  </>
+                ) : (
+                  <>
+                    <Save className="mr-2 h-5 w-5" />
+                    Save Session
+                  </>
+                )}
+              </Button>
+              
+              <Button
                 onClick={handleNewEntry}
                 size="lg"
                 className="bg-gradient-to-r from-mind-yellow/30 to-mind-orange/30 border border-mind-accent/50 hover:from-mind-yellow/40 hover:to-mind-orange/40 text-lg px-8 py-6 mind-glow transition-all duration-300"
               >
                 <RefreshCw className="mr-2 h-5 w-5" />
                 New Self-Check
+              </Button>
+              
+              <Button
+                asChild
+                variant="outline"
+                size="lg"
+                className="border-mind-accent/30 hover:bg-mind-yellow/10 text-lg px-8 py-6"
+              >
+                <Link href="/recent">
+                  <BookOpen className="mr-2 h-5 w-5" />
+                  View Saved Sessions
+                </Link>
               </Button>
               
               <Button

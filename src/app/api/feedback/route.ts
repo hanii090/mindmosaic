@@ -4,7 +4,16 @@ import { logUserFeedback } from '@/lib/db';
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { sessionId, entryId, rating, comments, helpful } = body;
+    const { 
+      sessionId, 
+      entryId, 
+      rating, 
+      comments, 
+      helpful,
+      supportive,
+      accurate,
+      emotionalSupport
+    } = body;
 
     // Validate input
     if (!sessionId) {
@@ -28,19 +37,22 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Log the feedback
+    // Log the enhanced feedback
     await logUserFeedback({
       sessionId,
       entryId,
       rating,
       comments: comments || '',
       helpful,
+      supportive: supportive || false,
+      accurate: accurate || false,
+      emotionalSupport: emotionalSupport || 'neutral',
       timestamp: new Date()
     });
 
     return NextResponse.json({ 
       success: true,
-      message: 'Thank you for your feedback! This helps us improve MindMosaic.'
+      message: 'Thank you for your detailed feedback! This helps us improve MindMosaic\'s emotional support.'
     });
 
   } catch (error) {

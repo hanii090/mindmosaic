@@ -1,12 +1,15 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useSession, signOut } from 'next-auth/react';
+import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { ArrowLeft, Download, Eye, Filter, Search, Calendar, User, MessageSquare, FileText, BarChart } from 'lucide-react';
+import { ArrowLeft, Download, Eye, Filter, Search, Calendar, User, MessageSquare, FileText, BarChart, LogOut } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
-import { exportAnalyticsCSV, exportFeedbackCSV, generateAdminReport } from '@/lib/adminExport';
+import { exportAnalyticsCSV, exportFeedbackCSV, generateAdminReport, analyzeFeedback } from '@/lib/adminExport';
+import { getAnalyticsData } from '@/lib/db';
 
 interface AdminEntry {
   id: number;
@@ -15,9 +18,13 @@ interface AdminEntry {
   detectedEmotion: string;
   aiResponse: string;
   sessionId: string;
+  riskLevel?: string;
+  sentiment?: string;
 }
 
 export default function AdminPage() {
+  const { data: session, status } = useSession();
+  const router = useRouter();
   const [entries, setEntries] = useState<AdminEntry[]>([]);
   const [filteredEntries, setFilteredEntries] = useState<AdminEntry[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
@@ -25,47 +32,91 @@ export default function AdminPage() {
   const [dateRange, setDateRange] = useState('all');
   const [isExporting, setIsExporting] = useState(false);
 
+  // Check authentication on mount
   useEffect(() => {
-    // Generate mock data for demo purposes
-    // In a real app, this would fetch from an API
+    if (status === 'loading') return; // Still loading
+
+    if (status === 'unauthenticated' || session?.user?.role !== 'admin') {
+      router.push('/admin/login');
+      return;
+    }
+  }, [session, status, router]);
+
+  // Load data after authentication
+  useEffect(() => {
+    if (status !== 'authenticated' || session?.user?.role !== 'admin') return;
+
+    // Load analytics data
+    const loadAnalytics = async () => {
+      try {
+        const data = await getAnalyticsData();
+        // Handle analytics data here if needed
+        console.log('Analytics data loaded:', data);
+      } catch (error) {
+        console.error('Failed to load analytics:', error);
+      }
+    };
+
+    // Load feedback analysis
+    const loadFeedback = async () => {
+      try {
+        const analysis = await analyzeFeedback();
+        console.log('Feedback analysis loaded:', analysis);
+      } catch (error) {
+        console.error('Failed to load feedback analysis:', error);
+      }
+    };
+
+    loadAnalytics();
+    loadFeedback();
+
+    // Generate mock entries for demo
     const mockEntries: AdminEntry[] = [
       {
         id: 1,
-        timestamp: new Date(Date.now() - 1000 * 60 * 30).toISOString(), // 30 minutes ago
+        timestamp: new Date(Date.now() - 1000 * 60 * 30).toISOString(),
         userInput: "I've been feeling really overwhelmed with my coursework lately. Between midterms and my part-time job, I feel like I can't keep up.",
         detectedEmotion: "anxious",
-        aiResponse: "I can understand how overwhelming it must feel to balance coursework and work responsibilities...",
-        sessionId: "session_abc123"
+        aiResponse: "I can understand how overwhelming it must feel to balance coursework and work responsibilities. This is a common challenge many students face...",
+        sessionId: "session_abc123",
+        riskLevel: "medium",
+        sentiment: "negative"
       },
       {
         id: 2,
-        timestamp: new Date(Date.now() - 1000 * 60 * 60 * 2).toISOString(), // 2 hours ago
+        timestamp: new Date(Date.now() - 1000 * 60 * 60 * 2).toISOString(),
         userInput: "My friends all seem to be doing better than me academically. I feel like I'm falling behind and it's making me sad.",
         detectedEmotion: "sad",
-        aiResponse: "Comparing ourselves to others is a natural human tendency, but it can be harmful to our wellbeing...",
-        sessionId: "session_def456"
+        aiResponse: "Comparing ourselves to others is a natural human tendency, but it can be harmful to our wellbeing. Remember that everyone's journey is different...",
+        sessionId: "session_def456",
+        riskLevel: "low",
+        sentiment: "negative"
       },
       {
         id: 3,
-        timestamp: new Date(Date.now() - 1000 * 60 * 60 * 6).toISOString(), // 6 hours ago
+        timestamp: new Date(Date.now() - 1000 * 60 * 60 * 6).toISOString(),
         userInput: "I just got accepted into the program I wanted! I'm so excited but also nervous about the challenges ahead.",
         detectedEmotion: "excited",
-        aiResponse: "Congratulations on this amazing achievement! It's completely normal to feel both excited and nervous...",
-        sessionId: "session_ghi789"
+        aiResponse: "Congratulations on this amazing achievement! It's completely normal to feel both excited and nervous about new challenges...",
+        sessionId: "session_ghi789",
+        riskLevel: "low",
+        sentiment: "positive"
       },
       {
         id: 4,
-        timestamp: new Date(Date.now() - 1000 * 60 * 60 * 24).toISOString(), // 1 day ago
+        timestamp: new Date(Date.now() - 1000 * 60 * 60 * 24).toISOString(),
         userInput: "I've been having trouble sleeping and concentrating. Everything feels difficult right now.",
         detectedEmotion: "tired",
-        aiResponse: "Sleep difficulties and concentration problems can significantly impact our daily functioning...",
-        sessionId: "session_jkl012"
+        aiResponse: "Sleep difficulties and concentration problems can significantly impact our daily functioning. Let's explore some strategies that might help...",
+        sessionId: "session_jkl012",
+        riskLevel: "medium",
+        sentiment: "negative"
       }
     ];
 
     setEntries(mockEntries);
     setFilteredEntries(mockEntries);
-  }, []);
+  }, [status, session]);
 
   useEffect(() => {
     let filtered = entries;
@@ -241,15 +292,16 @@ export default function AdminPage() {
             </Button>
             
             <div className="flex items-center space-x-3">
-              <div className="bg-yellow-400/20 text-yellow-400 px-3 py-1 rounded-full text-sm border border-yellow-400/30">
-                ⚠️ Demo Mode
+              <div className="bg-green-400/20 text-green-400 px-3 py-1 rounded-full text-sm border border-green-400/30">
+                🔒 Secure Session: {session?.user?.email}
               </div>
               
               <div className="flex gap-3">
                 <Button
                   onClick={handleExportAnalytics}
                   disabled={isExporting}
-                  className="bg-gradient-to-r from-mind-peach/20 to-mind-blue/20 border border-mind-peach/30 hover:from-mind-peach/30 hover:to-mind-blue/30"
+                  variant="secondary"
+                  size="sm"
                 >
                   <BarChart className="h-4 w-4 mr-2" />
                   {isExporting ? 'Exporting...' : 'Analytics CSV'}
@@ -258,7 +310,8 @@ export default function AdminPage() {
                 <Button
                   onClick={handleExportFeedback}
                   disabled={isExporting}
-                  className="bg-gradient-to-r from-mind-yellow/20 to-mind-orange/20 border border-mind-yellow/30 hover:from-mind-yellow/30 hover:to-mind-orange/30"
+                  variant="secondary"
+                  size="sm"
                 >
                   <MessageSquare className="h-4 w-4 mr-2" />
                   {isExporting ? 'Exporting...' : 'Feedback CSV'}
@@ -267,7 +320,8 @@ export default function AdminPage() {
                 <Button
                   onClick={handleGenerateReport}
                   disabled={isExporting}
-                  className="bg-gradient-to-r from-mind-lavender/20 to-mind-peach/20 border border-mind-lavender/30 hover:from-mind-lavender/30 hover:to-mind-peach/30"
+                  variant="secondary"
+                  size="sm"
                 >
                   <FileText className="h-4 w-4 mr-2" />
                   {isExporting ? 'Generating...' : 'Full Report'}
@@ -276,10 +330,20 @@ export default function AdminPage() {
                 <Button
                   onClick={exportToCSV}
                   disabled={isExporting}
-                  className="bg-gradient-to-r from-green-500/20 to-blue-500/20 border border-green-500/30 hover:from-green-500/30 hover:to-blue-500/30"
+                  variant="secondary"
+                  size="sm"
                 >
                   <Download className="h-4 w-4 mr-2" />
                   {isExporting ? 'Exporting...' : 'Raw Data CSV'}
+                </Button>
+                
+                <Button
+                  onClick={() => signOut({ callbackUrl: '/admin/login' })}
+                  variant="destructive"
+                  size="sm"
+                >
+                  <LogOut className="h-4 w-4 mr-2" />
+                  Sign Out
                 </Button>
               </div>
             </div>
