@@ -54,8 +54,6 @@ export async function POST(request: NextRequest) {
     // Get previous entries for context
     const previousEntries = await getSessionEntries(sessionId);
     const isFollowUp = previousEntries.length > 0;
-    
-    const startTime = Date.now();
 
     // Step 1: Analyze emotions with Replicate
     const emotionAnalysis = await detectEmotions(content);
@@ -126,8 +124,6 @@ export async function POST(request: NextRequest) {
       const trendAnalysis = await analyzeEmotionalTrends(entriesForTrends);
       trends = trendAnalysis.trends;
     }
-
-    const responseTime = Date.now() - startTime;
 
     // Step 5: Build comprehensive response
     const response: MindMosaicResponse = {

@@ -187,7 +187,7 @@ export async function getAnalyticsData(
       sentimentTrends: sentimentTrends || [],
       riskLevelCounts: riskCounts || { low: 0, medium: 0, high: 0 },
       averageSessionLength,
-      responseTime: 2.5 // This would need to be tracked separately
+      responseTime: 0 // This would need to be tracked separately
     };
     
   } catch (error) {
@@ -326,7 +326,7 @@ export async function getSystemMetrics(): Promise<{
       uptime: 99.9, // This would need to be tracked separately
       totalSessions: totalSessions || 0,
       activeUsers: activeUsers || 0,
-      averageResponseTime: 2.5, // This would need to be tracked separately
+      averageResponseTime: 0, // This would need to be tracked separately
       errorRate: 0.1 // This would need to be tracked separately
     };
   } catch (error) {

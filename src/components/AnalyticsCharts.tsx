@@ -1,6 +1,5 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -11,8 +10,7 @@ import {
   PointElement,
   Title,
   Tooltip,
-  Legend,
-  ChartOptions
+  Legend
 } from 'chart.js';
 import { Bar, Pie, Line } from 'react-chartjs-2';
 
@@ -61,7 +59,7 @@ const colors = {
   ]
 };
 
-const chartOptions: ChartOptions<any> = {
+const chartOptions = {
   responsive: true,
   maintainAspectRatio: false,
   plugins: {
@@ -164,7 +162,7 @@ export function SentimentTrendsChart({ data }: SentimentTrendsProps) {
         max: 1,
         ticks: {
           ...chartOptions.scales?.y?.ticks,
-          callback: function(value: any) {
+          callback: function(value: string | number) {
             if (value === -1) return 'Negative';
             if (value === 0) return 'Neutral';
             if (value === 1) return 'Positive';
@@ -232,10 +230,11 @@ export function RiskLevelChart({ data }: RiskLevelChartProps) {
         borderColor: 'rgba(251, 233, 231, 0.3)',
         borderWidth: 1,
         callbacks: {
-          label: function(context: any) {
-            const total = context.dataset.data.reduce((a: number, b: number) => a + b, 0);
-            const percentage = ((context.raw / total) * 100).toFixed(1);
-            return `${context.label}: ${context.raw} (${percentage}%)`;
+          label: function(tooltipItem: { label: string; raw: unknown; dataset: { data: number[] } }) {
+            const total = tooltipItem.dataset.data.reduce((a: number, b: number) => a + b, 0);
+            const rawValue = typeof tooltipItem.raw === 'number' ? tooltipItem.raw : 0;
+            const percentage = ((rawValue / total) * 100).toFixed(1);
+            return `${tooltipItem.label}: ${rawValue} (${percentage}%)`;
           }
         }
       }

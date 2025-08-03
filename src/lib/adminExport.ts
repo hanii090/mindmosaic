@@ -161,32 +161,22 @@ export async function analyzeFeedback(): Promise<FeedbackAnalysis> {
     };
   } catch (error) {
     console.error('Error analyzing feedback:', error);
-    // Return mock data for demo
+    // Return empty data structure instead of mock data
     return {
-      totalFeedback: 50,
-      averageRating: 4.2,
-      helpfulPercentage: 84,
-      supportivePercentage: 78,
-      accuratePercentage: 82,
+      totalFeedback: 0,
+      averageRating: 0,
+      helpfulPercentage: 0,
+      supportivePercentage: 0,
+      accuratePercentage: 0,
       emotionalSupportBreakdown: {
-        excellent: 22,
-        good: 18,
-        neutral: 8,
-        poor: 2
+        excellent: 0,
+        good: 0,
+        neutral: 0,
+        poor: 0
       },
-      commonThemes: [
-        { theme: 'helpful', count: 15 },
-        { theme: 'supportive', count: 12 },
-        { theme: 'understanding', count: 8 },
-        { theme: 'accurate', count: 6 },
-        { theme: 'caring', count: 5 }
-      ],
-      ratingDistribution: { 1: 2, 2: 3, 3: 8, 4: 15, 5: 22 },
-      improvementSuggestions: [
-        'Increase emotional validation in responses',
-        'Provide more personalized coping strategies',
-        'Improve response timing and relevance'
-      ]
+      commonThemes: [],
+      ratingDistribution: { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 },
+      improvementSuggestions: []
     };
   }
 }

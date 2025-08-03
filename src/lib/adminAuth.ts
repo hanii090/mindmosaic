@@ -1,13 +1,9 @@
 // Admin authentication utilities
-'use server';
 
 import { NextRequest, NextResponse } from 'next/server';
 
 // Authorized admin email (replace with your email)
 const ADMIN_EMAIL = process.env.ADMIN_EMAIL || 'admin@mindmosaic.app';
-
-// Simple JWT secret for demo purposes - in production use proper JWT setup
-const JWT_SECRET = process.env.JWT_SECRET || 'mindmosaic-admin-secret-2024';
 
 export interface AdminUser {
   email: string;
@@ -69,28 +65,23 @@ export async function adminAuthMiddleware(request: NextRequest) {
 }
 
 /**
- * Simple login function for demo purposes
+ * Simple login function using environment variables
  */
 export async function loginAdmin(email: string, password: string): Promise<boolean> {
-  // Simple check - in production, use proper authentication
-  if (email === ADMIN_EMAIL && password === 'mindmosaic2024') {
-    return true;
+  // Check against environment variables first
+  const adminEmail = process.env.ADMIN_EMAIL;
+  const adminPassword = process.env.ADMIN_PASSWORD;
+  
+  if (!adminEmail || !adminPassword) {
+    console.error('Admin credentials not configured in environment variables');
+    return false;
   }
-  return false;
+  
+  return email === adminEmail && password === adminPassword;
 }
 
 /**
  * Generate admin session
- */
-export function createAdminSession(): { success: boolean; message: string } {
-  return {
-    success: true,
-    message: 'Admin authenticated successfully'
-  };
-}
-
-/**
- * Clear admin session
  */
 export function clearAdminSession(): void {
   // In a real app, this would clear JWT tokens
