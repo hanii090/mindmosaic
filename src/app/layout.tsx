@@ -13,8 +13,6 @@ export const metadata: Metadata = {
   description: "AI-powered mental health self-check support designed for university students. Get gentle, anonymous guidance when you need it most.",
   keywords: ["mental health", "university students", "AI support", "wellbeing", "self-check"],
   authors: [{ name: "MindMosaic Team" }],
-  viewport: "width=device-width, initial-scale=1",
-  themeColor: "#0C0C0F",
   icons: {
     icon: "/favicon.svg",
     apple: "/favicon.svg",
@@ -30,6 +28,12 @@ export const metadata: Metadata = {
     title: "MindMosaic - Your Mind, Gently Heard",
     description: "AI-powered mental health self-check support for university students",
   },
+};
+
+export const viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  themeColor: '#0C0C0F',
 };
 
 export default function RootLayout({
