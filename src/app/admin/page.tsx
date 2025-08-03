@@ -68,52 +68,9 @@ export default function AdminPage() {
     loadAnalytics();
     loadFeedback();
 
-    // Generate mock entries for demo
-    const mockEntries: AdminEntry[] = [
-      {
-        id: 1,
-        timestamp: new Date(Date.now() - 1000 * 60 * 30).toISOString(),
-        userInput: "I've been feeling really overwhelmed with my coursework lately. Between midterms and my part-time job, I feel like I can't keep up.",
-        detectedEmotion: "anxious",
-        aiResponse: "I can understand how overwhelming it must feel to balance coursework and work responsibilities. This is a common challenge many students face...",
-        sessionId: "session_abc123",
-        riskLevel: "medium",
-        sentiment: "negative"
-      },
-      {
-        id: 2,
-        timestamp: new Date(Date.now() - 1000 * 60 * 60 * 2).toISOString(),
-        userInput: "My friends all seem to be doing better than me academically. I feel like I'm falling behind and it's making me sad.",
-        detectedEmotion: "sad",
-        aiResponse: "Comparing ourselves to others is a natural human tendency, but it can be harmful to our wellbeing. Remember that everyone's journey is different...",
-        sessionId: "session_def456",
-        riskLevel: "low",
-        sentiment: "negative"
-      },
-      {
-        id: 3,
-        timestamp: new Date(Date.now() - 1000 * 60 * 60 * 6).toISOString(),
-        userInput: "I just got accepted into the program I wanted! I'm so excited but also nervous about the challenges ahead.",
-        detectedEmotion: "excited",
-        aiResponse: "Congratulations on this amazing achievement! It's completely normal to feel both excited and nervous about new challenges...",
-        sessionId: "session_ghi789",
-        riskLevel: "low",
-        sentiment: "positive"
-      },
-      {
-        id: 4,
-        timestamp: new Date(Date.now() - 1000 * 60 * 60 * 24).toISOString(),
-        userInput: "I've been having trouble sleeping and concentrating. Everything feels difficult right now.",
-        detectedEmotion: "tired",
-        aiResponse: "Sleep difficulties and concentration problems can significantly impact our daily functioning. Let's explore some strategies that might help...",
-        sessionId: "session_jkl012",
-        riskLevel: "medium",
-        sentiment: "negative"
-      }
-    ];
-
-    setEntries(mockEntries);
-    setFilteredEntries(mockEntries);
+    // Initialize with empty data
+    setEntries([]);
+    setFilteredEntries([]);
   }, [status, session]);
 
   useEffect(() => {
@@ -278,16 +235,10 @@ export default function AdminPage() {
         <div className="container mx-auto px-4">
           {/* Navigation */}
           <div className="flex justify-between items-center mb-8">
-            <Button
-              asChild
-              variant="ghost"
-              className="text-white/70 hover:text-white"
-            >
-              <Link href="/" className="flex items-center space-x-2">
-                <ArrowLeft className="h-4 w-4" />
-                <span>Back to Home</span>
-              </Link>
-            </Button>
+            <Link href="/" className="inline-flex items-center space-x-2 text-white/70 hover:text-white transition-colors">
+              <ArrowLeft className="h-4 w-4" />
+              <span>Back to Home</span>
+            </Link>
             
             <div className="flex items-center space-x-3">
               <div className="bg-green-400/20 text-green-400 px-3 py-1 rounded-full text-sm border border-green-400/30">

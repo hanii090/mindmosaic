@@ -69,16 +69,10 @@ export default function FormPage() {
         <div className="container mx-auto px-4">
           {/* Back Button */}
           <div className="mb-8">
-            <Button
-              asChild
-              variant="outline"
-              className="border-mind-accent/30 hover:bg-mind-yellow/10 text-white"
-            >
-              <Link href="/">
-                <ArrowLeft className="mr-2 h-4 w-4" />
-                Back to Home
-              </Link>
-            </Button>
+            <Link href="/" className="inline-flex items-center space-x-2 px-4 py-2 border border-mind-accent/30 rounded-xl text-white hover:bg-mind-yellow/10 transition-colors">
+              <ArrowLeft className="h-4 w-4" />
+              <span>Back to Home</span>
+            </Link>
           </div>
 
           {/* Header Section */}

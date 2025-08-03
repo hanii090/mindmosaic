@@ -163,13 +163,9 @@ export default function AdminLoginPage() {
 
             {/* Back to Home */}
             <div className="text-center mt-6">
-              <Button 
-                asChild 
-                variant="ghost" 
-                className="text-white/70 hover:text-white"
-              >
-                <Link href="/">← Back to MindMosaic</Link>
-              </Button>
+              <Link href="/" className="inline-flex items-center space-x-2 text-white/70 hover:text-white transition-colors">
+                <span>← Back to MindMosaic</span>
+              </Link>
             </div>
           </div>
         </div>

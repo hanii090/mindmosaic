@@ -26,7 +26,7 @@ interface FeedbackData {
   comments: string;
 }
 
-// Feedback Collection Component
+// Feedback Collection Component (Enhanced)
 function FeedbackSection({ sessionId }: { sessionId: string }) {
   const [feedback, setFeedback] = useState<FeedbackData>({
     rating: 0,
@@ -64,86 +64,127 @@ function FeedbackSection({ sessionId }: { sessionId: string }) {
 
   if (submitted) {
     return (
-      <div className="bg-green-500/10 border border-green-500/20 rounded-xl p-6 text-center">
-        <h4 className="font-semibold text-green-300 mb-2">Thank You! 🙏</h4>
-        <p className="text-green-200 text-sm">
-          Your feedback helps us improve MindMosaic for everyone.
+      <div className="bg-green-500/10 border border-green-500/20 rounded-xl p-8 text-center animate-fade-in">
+        <div className="mb-4">
+          <div className="w-16 h-16 mx-auto rounded-full bg-green-500/20 flex items-center justify-center">
+            <span className="text-3xl">🙏</span>
+          </div>
+        </div>
+        <h4 className="font-semibold text-green-300 mb-3 text-xl">Thank You!</h4>
+        <p className="text-green-200">
+          Your feedback helps us improve MindMosaic for everyone. Your voice matters in making mental health support better and more accessible.
         </p>
       </div>
     );
   }
 
   return (
-    <div className="bg-white/5 border border-mind-accent/20 rounded-xl p-6">
-      <h4 className="font-semibold text-white mb-4">How was this session?</h4>
+    <div className="bg-gradient-to-br from-mind-accent/5 to-mind-blue/5 border border-mind-accent/30 rounded-xl p-8">
+      <div className="text-center mb-6">
+        <div className="w-12 h-12 mx-auto rounded-full bg-mind-accent/20 flex items-center justify-center mb-4">
+          <Heart className="h-6 w-6 text-mind-accent" />
+        </div>
+        <h4 className="font-semibold text-white text-xl mb-2">How was your experience?</h4>
+        <p className="text-white/70">
+          Your feedback helps us provide better support for students like you
+        </p>
+      </div>
       
       {/* Rating */}
-      <div className="mb-4">
-        <p className="text-white/80 text-sm mb-3">Rate your experience:</p>
-        <div className="flex gap-2">
+      <div className="mb-6">
+        <p className="text-white/90 font-medium mb-4 text-center">Rate your overall experience:</p>
+        <div className="flex justify-center gap-3">
           {[1, 2, 3, 4, 5].map((rating) => (
             <button
               key={rating}
               onClick={() => setFeedback(prev => ({ ...prev, rating }))}
-              className={`p-2 rounded-lg transition-colors ${
+              className={`p-3 rounded-xl transition-all duration-200 transform hover:scale-110 ${
                 feedback.rating >= rating 
-                  ? 'bg-mind-yellow/30 text-mind-yellow' 
+                  ? 'bg-mind-yellow/30 text-mind-yellow shadow-lg shadow-mind-yellow/20' 
                   : 'bg-white/5 text-white/40 hover:bg-white/10'
               }`}
             >
-              ⭐
+              <span className="text-2xl">⭐</span>
             </button>
           ))}
+        </div>
+        <div className="text-center mt-2">
+          <span className="text-white/60 text-sm">
+            {feedback.rating === 0 ? 'Click to rate' : 
+             feedback.rating === 1 ? 'Not helpful' :
+             feedback.rating === 2 ? 'Somewhat helpful' :
+             feedback.rating === 3 ? 'Helpful' :
+             feedback.rating === 4 ? 'Very helpful' :
+             'Extremely helpful'}
+          </span>
         </div>
       </div>
 
       {/* Helpful */}
-      <div className="mb-4">
-        <p className="text-white/80 text-sm mb-3">Was this helpful?</p>
-        <div className="flex gap-3">
+      <div className="mb-6">
+        <p className="text-white/90 font-medium mb-4 text-center">Did our AI support help you feel better?</p>
+        <div className="flex justify-center gap-4">
           <button
             onClick={() => setFeedback(prev => ({ ...prev, helpful: true }))}
-            className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${
+            className={`flex items-center gap-3 px-6 py-3 rounded-xl transition-all duration-200 ${
               feedback.helpful 
-                ? 'bg-green-500/30 text-green-300' 
-                : 'bg-white/5 text-white/60 hover:bg-white/10'
+                ? 'bg-green-500/30 text-green-300 border border-green-500/50' 
+                : 'bg-white/5 text-white/60 hover:bg-white/10 border border-white/20'
             }`}
           >
-            👍 Yes
+            <span className="text-xl">👍</span>
+            <span className="font-medium">Yes, it helped</span>
           </button>
           <button
             onClick={() => setFeedback(prev => ({ ...prev, helpful: false }))}
-            className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${
+            className={`flex items-center gap-3 px-6 py-3 rounded-xl transition-all duration-200 ${
               !feedback.helpful && feedback.rating > 0
-                ? 'bg-red-500/30 text-red-300' 
-                : 'bg-white/5 text-white/60 hover:bg-white/10'
+                ? 'bg-red-500/30 text-red-300 border border-red-500/50' 
+                : 'bg-white/5 text-white/60 hover:bg-white/10 border border-white/20'
             }`}
           >
-            👎 No
+            <span className="text-xl">👎</span>
+            <span className="font-medium">Not really</span>
           </button>
         </div>
       </div>
 
       {/* Comments */}
-      <div className="mb-4">
-        <p className="text-white/80 text-sm mb-3">Additional comments (optional):</p>
+      <div className="mb-6">
+        <p className="text-white/90 font-medium mb-3">How can we improve? (optional)</p>
         <Textarea
           value={feedback.comments}
           onChange={(e) => setFeedback(prev => ({ ...prev, comments: e.target.value }))}
-          placeholder="How can we improve your experience?"
-          className="bg-white/5 border-mind-accent/20 text-white placeholder:text-white/50"
-          rows={3}
+          placeholder="Share any thoughts on how we could make this experience better for you or other students..."
+          className="bg-white/5 border-mind-accent/20 text-white placeholder:text-white/50 min-h-[100px]"
+          rows={4}
         />
       </div>
 
       {/* Submit */}
-      <Button
-        onClick={submitFeedback}
-        disabled={feedback.rating === 0 || isSubmitting}
-        className="w-full bg-gradient-to-r from-mind-yellow/30 to-mind-orange/30 border border-mind-accent/50 hover:from-mind-yellow/40 hover:to-mind-orange/40"
-      >
-        {isSubmitting ? 'Submitting...' : 'Submit Feedback'}
-      </Button>
+      <div className="text-center">
+        <Button
+          onClick={submitFeedback}
+          disabled={feedback.rating === 0 || isSubmitting}
+          size="lg"
+          className="bg-gradient-to-r from-mind-yellow/30 to-mind-orange/30 border border-mind-accent/50 hover:from-mind-yellow/40 hover:to-mind-orange/40 disabled:opacity-50 px-8"
+        >
+          {isSubmitting ? (
+            <div className="flex items-center space-x-2">
+              <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+              <span>Submitting...</span>
+            </div>
+          ) : (
+            <div className="flex items-center space-x-2">
+              <Heart className="h-4 w-4" />
+              <span>Submit Feedback</span>
+            </div>
+          )}
+        </Button>
+        {feedback.rating === 0 && (
+          <p className="text-white/50 text-sm mt-2">Please rate your experience first</p>
+        )}
+      </div>
     </div>
   );
 }
