@@ -150,7 +150,8 @@ function FeedbackSection({ sessionId }: { sessionId: string }) {
 
 function ResultContent() {
   const [resultData, setResultData] = useState<ResultData | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [sessionSaved, setSessionSaved] = useState(false);
   const searchParams = useSearchParams();
@@ -206,9 +207,9 @@ function ResultContent() {
         sessionId: resultData.sessionId,
         timestamp: new Date().toISOString(),
         userInput,
-        detectedEmotion: resultData.emotionAnalysis?.dominantEmotion || 'neutral',
+        detectedEmotion: resultData.emotionAnalysis?.primaryEmotion || 'neutral',
         aiResponse: {
-          mainMessage: resultData.aiResponse?.mainMessage || '',
+          mainMessage: resultData.aiResponse?.response || '',
           suggestions: resultData.aiResponse?.suggestions || []
         }
       };
