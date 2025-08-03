@@ -71,7 +71,6 @@ export async function logJournalEntry(entry: Omit<JournalEntry, 'id'>): Promise<
     };
     await updateAnalytics(completeEntry);
     
-    console.log(`Journal entry logged with ID: ${data.id}`);
     return data.id;
     
   } catch (error) {
@@ -133,7 +132,6 @@ export async function createSession(sessionData: Omit<SessionData, 'endTime' | '
       throw new Error(`Failed to create session: ${error.message}`);
     }
     
-    console.log(`Session created with ID: ${sessionData.sessionId}`);
   } catch (error) {
     console.error('Error creating session:', error);
     throw new Error('Failed to create session');
@@ -144,7 +142,9 @@ export async function createSession(sessionData: Omit<SessionData, 'endTime' | '
  * Gets analytics data for the admin dashboard
  */
 export async function getAnalyticsData(
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   startDate?: Date,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   endDate?: Date
 ): Promise<AnalyticsData> {
   try {
@@ -291,7 +291,6 @@ export async function logUserFeedback(feedback: {
       throw new Error(`Failed to log user feedback: ${error.message}`);
     }
     
-    console.log('Enhanced user feedback logged successfully');
   } catch (error) {
     console.error('Error logging user feedback:', error);
     throw new Error('Failed to log user feedback');

@@ -1,12 +1,15 @@
 'use client';
 
 import { SessionProvider } from 'next-auth/react';
+import React from 'react';
+
+interface RootLayoutClientProps {
+  children: React.ReactNode;
+}
 
 export default function RootLayoutClient({
   children,
-}: {
-  children: React.ReactNode;
-}) {
+}: RootLayoutClientProps) {
   return (
     <SessionProvider>
       {children}

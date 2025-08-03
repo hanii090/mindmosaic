@@ -3,9 +3,9 @@
 import { useEffect, useRef } from 'react';
 import { gsap } from 'gsap';
 
-// Enhanced GSAP animation hook
-export function useGSAPAnimation(animationType: 'fadeInUp' | 'fadeIn' | 'slideInLeft' | 'slideInRight' | 'scaleIn' = 'fadeInUp') {
-  const elementRef = useRef<HTMLElement>(null);
+// Enhanced GSAP animation hook with generic type support
+export function useGSAPAnimation<T extends HTMLElement = HTMLElement>(animationType: 'fadeInUp' | 'fadeIn' | 'slideInLeft' | 'slideInRight' | 'scaleIn' = 'fadeInUp') {
+  const elementRef = useRef<T>(null);
 
   useEffect(() => {
     const element = elementRef.current;

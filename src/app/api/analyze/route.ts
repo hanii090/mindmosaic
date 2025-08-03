@@ -58,11 +58,9 @@ export async function POST(request: NextRequest) {
     const startTime = Date.now();
 
     // Step 1: Analyze emotions with Replicate
-    console.log('Analyzing emotions...');
     const emotionAnalysis = await detectEmotions(content);
 
     // Step 2: Get AI response from Zephyr via Together.ai
-    console.log('Getting AI response...');
     let aiResponse;
     
     if (isFollowUp && previousEntries.length > 0) {
@@ -106,7 +104,6 @@ export async function POST(request: NextRequest) {
     }
 
     // Step 3: Log the entry to database
-    console.log('Logging entry to database...');
     const entryId = await logJournalEntry({
       content,
       timestamp: new Date(),
@@ -120,7 +117,6 @@ export async function POST(request: NextRequest) {
     // Step 4: Get emotional trends if this is a follow-up
     let trends;
     if (isFollowUp) {
-      console.log('Analyzing emotional trends...');
       const allEntries = await getSessionEntries(sessionId);
       const entriesForTrends = allEntries.map(entry => ({
         text: entry.content,
@@ -132,7 +128,6 @@ export async function POST(request: NextRequest) {
     }
 
     const responseTime = Date.now() - startTime;
-    console.log(`Response generated in ${responseTime}ms`);
 
     // Step 5: Build comprehensive response
     const response: MindMosaicResponse = {

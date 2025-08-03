@@ -49,9 +49,8 @@ export default function AdminPage() {
     // Load analytics data
     const loadAnalytics = async () => {
       try {
-        const data = await getAnalyticsData();
+        await getAnalyticsData();
         // Handle analytics data here if needed
-        console.log('Analytics data loaded:', data);
       } catch (error) {
         console.error('Failed to load analytics:', error);
       }
@@ -60,8 +59,7 @@ export default function AdminPage() {
     // Load feedback analysis
     const loadFeedback = async () => {
       try {
-        const analysis = await analyzeFeedback();
-        console.log('Feedback analysis loaded:', analysis);
+        await analyzeFeedback();
       } catch (error) {
         console.error('Failed to load feedback analysis:', error);
       }

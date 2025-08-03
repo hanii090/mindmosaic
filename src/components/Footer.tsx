@@ -1,7 +1,6 @@
 'use client';
 
 import Link from 'next/link';
-import { Heart, Shield, Mail } from 'lucide-react';
 
 export default function Footer() {
   return (

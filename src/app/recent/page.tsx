@@ -22,7 +22,7 @@ interface SavedSession {
 
 export default function RecentSessionsPage() {
   const [savedSessions, setSavedSessions] = useState<SavedSession[]>([]);
-  const pageRef = useGSAPAnimation('fadeInUp');
+  const pageRef = useGSAPAnimation<HTMLElement>('fadeInUp');
   const sessionsRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {

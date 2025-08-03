@@ -1,11 +1,10 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
-import { Star, ThumbsUp, ThumbsDown, Heart, Meh, Sparkles } from 'lucide-react';
+import { Star, ThumbsUp, Heart, Sparkles } from 'lucide-react';
 import { useGSAPAnimation, staggerAnimation } from '@/lib/animations';
-import { useEffect, useRef } from 'react';
 
 interface FeedbackFormProps {
   sessionId: string;
@@ -35,7 +34,7 @@ export default function FeedbackForm({ sessionId, entryId, onSubmitted }: Feedba
   const [isSubmitting, setIsSubmitting] = useState(false);
   
   // GSAP animations
-  const formRef = useGSAPAnimation('fadeInUp');
+  const formRef = useGSAPAnimation<HTMLDivElement>('fadeInUp');
   const starsRef = useRef<HTMLDivElement>(null);
   
   useEffect(() => {
