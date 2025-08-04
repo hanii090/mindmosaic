@@ -402,6 +402,38 @@ export function generateSessionId(): string {
 }
 
 /**
+ * Gets all journal entries for admin analytics
+ */
+export async function getAllJournalEntries(): Promise<JournalEntry[]> {
+  try {
+    const { data, error } = await supabase
+      .from('journal_entries')
+      .select('*')
+      .order('timestamp', { ascending: false });
+
+    if (error) {
+      console.error('Error retrieving all journal entries:', error);
+      return [];
+    }
+
+    return (data || []).map(entry => ({
+      id: entry.id,
+      content: entry.content,
+      timestamp: new Date(entry.timestamp),
+      emotions: entry.emotions || [],
+      sentiment: entry.sentiment as 'positive' | 'negative' | 'neutral',
+      sentimentScore: Number(entry.sentiment_score),
+      riskLevel: entry.risk_level as 'low' | 'medium' | 'high',
+      sessionId: entry.session_id,
+      anonymousUserId: entry.anonymous_user_id || undefined
+    }));
+  } catch (error) {
+    console.error('Error retrieving all journal entries:', error);
+    return [];
+  }
+}
+
+/**
  * Cleans up old data (run periodically)
  */
 export async function cleanupOldData(retentionDays: number = 90): Promise<void> {

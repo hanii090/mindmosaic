@@ -13,7 +13,12 @@ import {
   TrendingUp,
   Heart,
   Clock,
-  AlertTriangle
+  AlertTriangle,
+  Brain,
+  PlayCircle,
+  RefreshCw,
+  Database,
+  Target
 } from 'lucide-react';
 
 interface AnalyticsData {
@@ -33,10 +38,28 @@ interface AnalyticsData {
   weeklyGrowth: number;
 }
 
+interface TrainingResults {
+  datasetSize: number;
+  trainingSize: number;
+  testSize: number;
+  metrics: {
+    accuracy: number;
+    precision: number;
+    recall: number;
+    f1Score: number;
+  };
+  emotionPatterns: { [emotion: string]: number };
+  sentimentDistribution: { positive: number; negative: number; neutral: number };
+  recommendations: string[];
+}
+
 export default function AdminDashboard() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [analytics, setAnalytics] = useState<AnalyticsData | null>(null);
+  const [trainingResults, setTrainingResults] = useState<TrainingResults | null>(null);
+  const [isTraining, setIsTraining] = useState(false);
+  const [showTraining, setShowTraining] = useState(false);
   const router = useRouter();
 
   useEffect(() => {
@@ -58,24 +81,103 @@ export default function AdminDashboard() {
   }, [router]);
 
   const loadAnalytics = async () => {
-    const mockData: AnalyticsData = {
-      totalEntries: 1247,
-      averageSessionLength: 8.5,
-      responseTime: 245,
-      riskLevelCounts: {
-        low: 856,
-        medium: 312,
-        high: 79
-      },
-      emotionDistribution: {
-        positive: 45,
-        neutral: 35,
-        negative: 20
-      },
-      weeklyGrowth: 12.3
-    };
-    
-    setAnalytics(mockData);
+    try {
+      const response = await fetch('/api/admin?action=analytics', {
+        headers: {
+          'Authorization': 'Bearer admin-token'
+        }
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to fetch analytics');
+      }
+      
+      const data = await response.json();
+      
+      // Calculate emotion distribution percentages
+      const emotionTotal = Object.values(data.emotionDistribution).reduce((a: number, b: unknown) => a + (typeof b === 'number' ? b : 0), 0) as number;
+      const emotionDistribution = {
+        positive: emotionTotal > 0 ? Math.round((data.emotionDistribution.positive || 0) / emotionTotal * 100) : 0,
+        neutral: emotionTotal > 0 ? Math.round((data.emotionDistribution.neutral || 0) / emotionTotal * 100) : 0,
+        negative: emotionTotal > 0 ? Math.round((data.emotionDistribution.negative || 0) / emotionTotal * 100) : 0
+      };
+      
+      // Calculate weekly growth (mock for now - would need historical data)
+      const weeklyGrowth = Math.random() * 20 - 10; // -10 to +10
+      
+      setAnalytics({
+        totalEntries: data.totalEntries,
+        averageSessionLength: Math.round(data.averageSessionLength * 10) / 10,
+        responseTime: Math.round(Math.random() * 300 + 100), // Mock response time
+        riskLevelCounts: data.riskLevelCounts,
+        emotionDistribution,
+        weeklyGrowth
+      });
+    } catch (error) {
+      console.error('Error loading analytics:', error);
+      // Set default values if API fails
+      setAnalytics({
+        totalEntries: 0,
+        averageSessionLength: 0,
+        responseTime: 0,
+        riskLevelCounts: { low: 0, medium: 0, high: 0 },
+        emotionDistribution: { positive: 0, neutral: 0, negative: 0 },
+        weeklyGrowth: 0
+      });
+    }
+  };
+
+  const analyzeDataset = async () => {
+    setIsTraining(true);
+    try {
+      const response = await fetch('/api/admin/training', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer admin-token'
+        },
+        body: JSON.stringify({ action: 'analyze_dataset' })
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to analyze dataset');
+      }
+      
+      const results = await response.json();
+      setTrainingResults(results);
+    } catch (error) {
+      console.error('Error analyzing dataset:', error);
+      alert('Failed to analyze dataset. Please try again.');
+    } finally {
+      setIsTraining(false);
+    }
+  };
+
+  const trainModel = async () => {
+    setIsTraining(true);
+    try {
+      const response = await fetch('/api/admin/training', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer admin-token'
+        },
+        body: JSON.stringify({ action: 'train_model' })
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to train model');
+      }
+      
+      const results = await response.json();
+      setTrainingResults(results);
+      alert('Model training completed successfully!');
+    } catch (error) {
+      console.error('Error training model:', error);
+      alert('Failed to train model. Please try again.');
+    } finally {
+      setIsTraining(false);
+    }
   };
 
   const handleLogout = () => {
@@ -83,16 +185,33 @@ export default function AdminDashboard() {
     router.push('/admin/login');
   };
 
-  const exportData = async (type: 'analytics' | 'feedback') => {
-    const filename = `mindmosaic-${type}-${Date.now()}.csv`;
-    const csvContent = `data:text/csv;charset=utf-8,Type,Value\nTotal Entries,${analytics?.totalEntries || 0}\nAverage Session,${analytics?.averageSessionLength || 0} min`;
-    
-    const link = document.createElement('a');
-    link.setAttribute('href', encodeURI(csvContent));
-    link.setAttribute('download', filename);
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+  const exportData = async (type: 'analytics' | 'feedback' | 'dataset') => {
+    try {
+      const response = await fetch(`/api/admin?action=export&type=${type}`, {
+        headers: {
+          'Authorization': 'Bearer admin-token'
+        }
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to export data');
+      }
+      
+      const csvData = await response.text();
+      const blob = new Blob([csvData], { type: 'text/csv' });
+      const url = window.URL.createObjectURL(blob);
+      
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `mindmosaic-${type}-${new Date().toISOString().split('T')[0]}.csv`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error('Error exporting data:', error);
+      alert('Failed to export data. Please try again.');
+    }
   };
 
   if (isLoading) {
@@ -125,6 +244,13 @@ export default function AdminDashboard() {
           </div>
           
           <div className="flex items-center space-x-4 mt-4 md:mt-0">
+            <button
+              onClick={() => setShowTraining(!showTraining)}
+              className="bg-purple-500/20 border border-purple-500/50 hover:bg-purple-500/30 text-purple-200 px-4 py-2 rounded-xl flex items-center space-x-2 transition-colors"
+            >
+              <Brain className="h-4 w-4" />
+              <span>AI Training</span>
+            </button>
             <button
               onClick={() => exportData('analytics')}
               className="bg-white/10 border border-white/20 hover:bg-white/20 text-white px-4 py-2 rounded-xl flex items-center space-x-2 transition-colors"
@@ -324,6 +450,123 @@ export default function AdminDashboard() {
                 </div>
               </div>
             </div>
+
+            {/* AI Training Section */}
+            {showTraining && (
+              <div className="bg-gradient-to-br from-purple-500/10 to-blue-500/10 backdrop-blur-xl p-6 rounded-2xl border border-purple-500/20">
+                <h3 className="text-lg font-semibold text-white mb-6 flex items-center">
+                  <Brain className="h-5 w-5 mr-2 text-purple-400" />
+                  AI Model Training & Analysis
+                </h3>
+
+                {/* Training Controls */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                  <button
+                    onClick={analyzeDataset}
+                    disabled={isTraining}
+                    className="bg-blue-500/20 border border-blue-500/50 hover:bg-blue-500/30 disabled:opacity-50 text-white px-4 py-3 rounded-xl flex items-center justify-center space-x-2 transition-colors"
+                  >
+                    {isTraining ? (
+                      <RefreshCw className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <Database className="h-4 w-4" />
+                    )}
+                    <span>Analyze Dataset</span>
+                  </button>
+
+                  <button
+                    onClick={trainModel}
+                    disabled={isTraining}
+                    className="bg-green-500/20 border border-green-500/50 hover:bg-green-500/30 disabled:opacity-50 text-white px-4 py-3 rounded-xl flex items-center justify-center space-x-2 transition-colors"
+                  >
+                    {isTraining ? (
+                      <RefreshCw className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <PlayCircle className="h-4 w-4" />
+                    )}
+                    <span>Train Model</span>
+                  </button>
+
+                  <button
+                    onClick={() => window.location.reload()}
+                    className="bg-orange-500/20 border border-orange-500/50 hover:bg-orange-500/30 text-white px-4 py-3 rounded-xl flex items-center justify-center space-x-2 transition-colors"
+                  >
+                    <RefreshCw className="h-4 w-4" />
+                    <span>Refresh Data</span>
+                  </button>
+                </div>
+
+                {/* Training Results */}
+                {trainingResults && (
+                  <div className="space-y-6">
+                    {/* Dataset Info */}
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      <div className="bg-white/5 p-4 rounded-xl">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <p className="text-white/70 text-sm">Dataset Size</p>
+                            <p className="text-xl font-bold text-white">{trainingResults.datasetSize}</p>
+                          </div>
+                          <Database className="h-6 w-6 text-blue-400" />
+                        </div>
+                      </div>
+                      
+                      <div className="bg-white/5 p-4 rounded-xl">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <p className="text-white/70 text-sm">Model Accuracy</p>
+                            <p className="text-xl font-bold text-green-400">{(trainingResults.metrics.accuracy * 100).toFixed(1)}%</p>
+                          </div>
+                          <Target className="h-6 w-6 text-green-400" />
+                        </div>
+                      </div>
+                      
+                      <div className="bg-white/5 p-4 rounded-xl">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <p className="text-white/70 text-sm">F1 Score</p>
+                            <p className="text-xl font-bold text-purple-400">{(trainingResults.metrics.f1Score * 100).toFixed(1)}%</p>
+                          </div>
+                          <BarChart3 className="h-6 w-6 text-purple-400" />
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Top Emotions */}
+                    <div className="bg-white/5 p-4 rounded-xl">
+                      <h4 className="text-white font-medium mb-3">Top Detected Emotions</h4>
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+                        {Object.entries(trainingResults.emotionPatterns)
+                          .sort(([,a], [,b]) => b - a)
+                          .slice(0, 8)
+                          .map(([emotion, count]) => (
+                            <div key={emotion} className="bg-white/5 p-2 rounded text-center">
+                              <p className="text-white text-sm capitalize">{emotion}</p>
+                              <p className="text-blue-400 text-xs">{count} occurrences</p>
+                            </div>
+                          ))}
+                      </div>
+                    </div>
+
+                    {/* Recommendations */}
+                    <div className="bg-yellow-500/10 border border-yellow-500/20 p-4 rounded-xl">
+                      <h4 className="text-yellow-200 font-medium mb-3 flex items-center">
+                        <AlertTriangle className="h-4 w-4 mr-2" />
+                        AI Recommendations
+                      </h4>
+                      <ul className="space-y-2">
+                        {trainingResults.recommendations.map((rec, index) => (
+                          <li key={index} className="text-yellow-100 text-sm flex items-start">
+                            <span className="text-yellow-400 mr-2">•</span>
+                            {rec}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
           </>
         )}
 
