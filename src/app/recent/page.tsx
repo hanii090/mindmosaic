@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { Button } from '@/components/ui/button';
 import { Clock, Heart, ArrowRight, Trash2 } from 'lucide-react';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
@@ -22,6 +21,7 @@ interface SavedSession {
 
 export default function RecentSessionsPage() {
   const [savedSessions, setSavedSessions] = useState<SavedSession[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const pageRef = useGSAPAnimation<HTMLElement>('fadeInUp');
   const sessionsRef = useRef<HTMLDivElement>(null);
 
@@ -29,13 +29,17 @@ export default function RecentSessionsPage() {
     // Load saved sessions from localStorage
     const loadSavedSessions = () => {
       try {
-        const sessions = localStorage.getItem('mindmosaic_saved_sessions');
-        if (sessions) {
-          const parsedSessions = JSON.parse(sessions);
-          setSavedSessions(parsedSessions.slice(0, 3)); // Keep only last 3
+        if (typeof window !== 'undefined') {
+          const sessions = localStorage.getItem('mindmosaic_saved_sessions');
+          if (sessions) {
+            const parsedSessions = JSON.parse(sessions);
+            setSavedSessions(parsedSessions.slice(0, 3)); // Keep only last 3
+          }
         }
       } catch (error) {
         console.error('Error loading saved sessions:', error);
+      } finally {
+        setIsLoading(false);
       }
     };
 
@@ -44,18 +48,22 @@ export default function RecentSessionsPage() {
 
   useEffect(() => {
     // Animate session cards
-    if (sessionsRef.current && savedSessions.length > 0) {
+    if (sessionsRef.current && savedSessions.length > 0 && !isLoading) {
       const cards = sessionsRef.current.querySelectorAll('.session-card');
-      staggerAnimation(cards);
+      if (cards.length > 0) {
+        staggerAnimation(cards);
+      }
     }
-  }, [savedSessions]);
+  }, [savedSessions, isLoading]);
 
   const handleDeleteSession = (sessionId: string) => {
     const updatedSessions = savedSessions.filter(session => session.sessionId !== sessionId);
     setSavedSessions(updatedSessions);
     
     try {
-      localStorage.setItem('mindmosaic_saved_sessions', JSON.stringify(updatedSessions));
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('mindmosaic_saved_sessions', JSON.stringify(updatedSessions));
+      }
     } catch (error) {
       console.error('Error updating saved sessions:', error);
     }
@@ -65,6 +73,23 @@ export default function RecentSessionsPage() {
     const date = new Date(timestamp);
     return date.toLocaleDateString() + ' at ' + date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
   };
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen gradient-bg">
+        <Header />
+        <main className="pt-24 pb-12">
+          <div className="container mx-auto px-4">
+            <div className="max-w-4xl mx-auto text-center">
+              <div className="animate-spin w-8 h-8 border-2 border-white/30 border-t-white rounded-full mx-auto" />
+              <p className="text-white/70 mt-4">Loading your sessions...</p>
+            </div>
+          </div>
+        </main>
+        <Footer />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen gradient-bg">
@@ -101,12 +126,13 @@ export default function RecentSessionsPage() {
                     <p className="text-white/60 mb-6">
                       You haven't saved any sessions yet. Complete a self-check to start building your emotional wellness history.
                     </p>
-                    <Button asChild size="lg">
-                      <Link href="/form">
-                        Start Your First Session
-                        <ArrowRight className="ml-2 h-5 w-5" />
-                      </Link>
-                    </Button>
+                    <Link 
+                      href="/form"
+                      className="inline-flex items-center px-6 py-3 bg-gradient-to-r from-mind-yellow/30 to-mind-orange/30 border border-mind-accent/50 text-white hover:from-mind-yellow/40 hover:to-mind-orange/40 rounded-xl transition-all duration-200"
+                    >
+                      Start Your First Session
+                      <ArrowRight className="ml-2 h-5 w-5" />
+                    </Link>
                   </div>
                 </div>
               ) : (
@@ -127,14 +153,12 @@ export default function RecentSessionsPage() {
                         <span className="text-xs px-3 py-1 rounded-full bg-mind-accent/20 text-mind-accent border border-mind-accent/30">
                           {session.detectedEmotion}
                         </span>
-                        <Button
+                        <button
                           onClick={() => handleDeleteSession(session.sessionId)}
-                          variant="ghost"
-                          size="sm"
-                          className="text-red-400 hover:text-red-300 hover:bg-red-500/10"
+                          className="text-red-400 hover:text-red-300 hover:bg-red-500/10 p-2 rounded-lg transition-colors"
                         >
                           <Trash2 className="h-4 w-4" />
-                        </Button>
+                        </button>
                       </div>
                     </div>
 
@@ -161,16 +185,13 @@ export default function RecentSessionsPage() {
                         <span className="text-white/50 text-xs">
                           Session #{index + 1}
                         </span>
-                        <Button 
-                          asChild 
-                          variant="outline" 
-                          size="sm"
+                        <Link 
+                          href={`/result?session=${session.sessionId}`}
+                          className="inline-flex items-center px-4 py-2 border border-white/20 text-white hover:bg-white/10 rounded-lg transition-colors text-sm"
                         >
-                          <Link href={`/result?session=${session.sessionId}`}>
-                            View Full Session
-                            <ArrowRight className="ml-2 h-4 w-4" />
-                          </Link>
-                        </Button>
+                          View Full Session
+                          <ArrowRight className="ml-2 h-4 w-4" />
+                        </Link>
                       </div>
                     </div>
                   </div>
@@ -180,17 +201,21 @@ export default function RecentSessionsPage() {
 
             {/* Action Buttons */}
             <div className="text-center mt-12 space-y-4">
-              <Button asChild size="lg" variant="default">
-                <Link href="/form">
-                  <Heart className="mr-2 h-5 w-5" />
-                  Start New Session
-                </Link>
-              </Button>
+              <Link 
+                href="/form"
+                className="inline-flex items-center px-6 py-3 bg-gradient-to-r from-mind-yellow/30 to-mind-orange/30 border border-mind-accent/50 text-white hover:from-mind-yellow/40 hover:to-mind-orange/40 rounded-xl transition-all duration-200"
+              >
+                <Heart className="mr-2 h-5 w-5" />
+                Start New Session
+              </Link>
               
               <div>
-                <Button asChild variant="ghost">
-                  <Link href="/">← Back to Home</Link>
-                </Button>
+                <Link 
+                  href="/"
+                  className="inline-flex items-center text-white/70 hover:text-white transition-colors"
+                >
+                  ← Back to Home
+                </Link>
               </div>
             </div>
           </div>

@@ -76,6 +76,19 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
 
     React.useImperativeHandle(ref, () => buttonRef.current!);
 
+    // When using asChild, we should only pass the children to Slot
+    if (asChild) {
+      return (
+        <Slot
+          className={cn(buttonVariants({ variant, size, glow, className }))}
+          onClick={handleClick}
+          {...props}
+        >
+          {children}
+        </Slot>
+      );
+    }
+
     return (
       <Comp
         className={cn(buttonVariants({ variant, size, glow, className }))}

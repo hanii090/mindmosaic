@@ -8,6 +8,9 @@ export function useGSAPAnimation<T extends HTMLElement = HTMLElement>(animationT
   const elementRef = useRef<T>(null);
 
   useEffect(() => {
+    // Ensure we're on the client side
+    if (typeof window === 'undefined') return;
+    
     const element = elementRef.current;
     if (!element) return;
 
@@ -133,7 +136,9 @@ export function formSubmitAnimation(element: HTMLElement) {
 
 // Stagger animation for lists
 export function staggerAnimation(elements: NodeListOf<Element> | Element[]) {
-  if (!elements.length) return;
+  // Ensure we're on the client side
+  if (typeof window === 'undefined') return;
+  if (!elements || !elements.length) return;
   
   gsap.fromTo(elements, {
     opacity: 0,

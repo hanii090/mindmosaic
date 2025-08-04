@@ -4,7 +4,6 @@ import { useEffect, useState, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { Brain, Heart, ArrowLeft, RefreshCw, Save, BookOpen } from 'lucide-react';
 import Link from 'next/link';
-import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { ResultCard } from '@/components/EntryCard';
 import EmotionIcon from '@/components/EmotionIcon';
@@ -163,11 +162,10 @@ function FeedbackSection({ sessionId }: { sessionId: string }) {
 
       {/* Submit */}
       <div className="text-center">
-        <Button
+        <button
           onClick={submitFeedback}
           disabled={feedback.rating === 0 || isSubmitting}
-          size="lg"
-          className="bg-gradient-to-r from-mind-yellow/30 to-mind-orange/30 border border-mind-accent/50 hover:from-mind-yellow/40 hover:to-mind-orange/40 disabled:opacity-50 px-8"
+          className="px-8 py-3 bg-gradient-to-r from-mind-yellow/30 to-mind-orange/30 border border-mind-accent/50 hover:from-mind-yellow/40 hover:to-mind-orange/40 disabled:opacity-50 text-white rounded-xl transition-all duration-200 flex items-center justify-center mx-auto"
         >
           {isSubmitting ? (
             <div className="flex items-center space-x-2">
@@ -180,7 +178,7 @@ function FeedbackSection({ sessionId }: { sessionId: string }) {
               <span>Submit Feedback</span>
             </div>
           )}
-        </Button>
+        </button>
         {feedback.rating === 0 && (
           <p className="text-white/50 text-sm mt-2">Please rate your experience first</p>
         )}
@@ -297,9 +295,12 @@ function ResultContent() {
               </div>
               <h1 className="text-2xl font-bold text-white">Something Went Wrong</h1>
               <p className="text-white/70">{error}</p>
-              <Button asChild className="bg-gradient-to-r from-mind-yellow/30 to-mind-orange/30 border border-mind-accent/50">
-                <Link href="/form">Start New Self-Check</Link>
-              </Button>
+              <Link 
+                href="/form"
+                className="inline-flex items-center px-6 py-3 bg-gradient-to-r from-mind-yellow/30 to-mind-orange/30 border border-mind-accent/50 text-white hover:from-mind-yellow/40 hover:to-mind-orange/40 rounded-xl transition-all duration-200"
+              >
+                Start New Self-Check
+              </Link>
             </div>
           </div>
         </main>
@@ -318,16 +319,13 @@ function ResultContent() {
         <div className="container mx-auto px-4">
           {/* Back Button */}
           <div className="mb-8">
-            <Button
-              asChild
-              variant="outline"
-              className="border-mind-accent/30 hover:bg-mind-yellow/10 text-white"
+            <Link 
+              href="/"
+              className="inline-flex items-center px-4 py-2 border border-mind-accent/30 hover:bg-mind-yellow/10 text-white rounded-xl transition-colors"
             >
-              <Link href="/">
-                <ArrowLeft className="mr-2 h-4 w-4" />
-                Back to Home
-              </Link>
-            </Button>
+              <ArrowLeft className="mr-2 h-4 w-4" />
+              Back to Home
+            </Link>
           </div>
 
           {/* Header */}
@@ -460,12 +458,14 @@ function ResultContent() {
 
             {/* Actions */}
             <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mt-12">
-              <Button
+              <button
                 onClick={handleSaveSession}
                 disabled={isSaving || sessionSaved}
-                variant={sessionSaved ? "success" : "secondary"}
-                size="lg"
-                className="text-lg px-8 py-6"
+                className={`px-8 py-6 text-lg rounded-xl transition-all duration-200 flex items-center ${
+                  sessionSaved 
+                    ? 'bg-green-500/30 border border-green-500/50 text-white' 
+                    : 'bg-white/10 border border-white/20 text-white hover:bg-white/20'
+                } disabled:opacity-50`}
               >
                 {isSaving ? (
                   <>
@@ -483,39 +483,30 @@ function ResultContent() {
                     Save Session
                   </>
                 )}
-              </Button>
+              </button>
               
-              <Button
+              <button
                 onClick={handleNewEntry}
-                size="lg"
-                className="bg-gradient-to-r from-mind-yellow/30 to-mind-orange/30 border border-mind-accent/50 hover:from-mind-yellow/40 hover:to-mind-orange/40 text-lg px-8 py-6 mind-glow transition-all duration-300"
+                className="px-8 py-6 bg-gradient-to-r from-mind-yellow/30 to-mind-orange/30 border border-mind-accent/50 hover:from-mind-yellow/40 hover:to-mind-orange/40 text-lg text-white rounded-xl transition-all duration-300 flex items-center"
               >
                 <RefreshCw className="mr-2 h-5 w-5" />
                 New Self-Check
-              </Button>
+              </button>
               
-              <Button
-                asChild
-                variant="outline"
-                size="lg"
-                className="border-mind-accent/30 hover:bg-mind-yellow/10 text-lg px-8 py-6"
+              <Link 
+                href="/recent"
+                className="inline-flex items-center px-8 py-6 border border-mind-accent/30 hover:bg-mind-yellow/10 text-lg text-white rounded-xl transition-colors"
               >
-                <Link href="/recent">
-                  <BookOpen className="mr-2 h-5 w-5" />
-                  View Saved Sessions
-                </Link>
-              </Button>
+                <BookOpen className="mr-2 h-5 w-5" />
+                View Saved Sessions
+              </Link>
               
-              <Button
-                asChild
-                variant="outline"
-                size="lg"
-                className="border-mind-accent/30 hover:bg-mind-yellow/10 text-lg px-8 py-6"
+              <Link 
+                href="/privacy"
+                className="inline-flex items-center px-8 py-6 border border-mind-accent/30 hover:bg-mind-yellow/10 text-lg text-white rounded-xl transition-colors"
               >
-                <Link href="/privacy">
-                  Learn About Privacy →
-                </Link>
-              </Button>
+                Learn About Privacy →
+              </Link>
             </div>
 
             {/* Feedback Section */}
