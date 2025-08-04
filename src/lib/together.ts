@@ -48,7 +48,7 @@ export async function analyzeJournalWithZephyr(
           content: prompt
         }
       ],
-      model: 'meta-llama/Llama-2-7b-chat-hf',
+      model: 'mistralai/Mistral-7B-Instruct-v0.1',
       max_tokens: 800,
       temperature: 0.7,
       top_p: 0.9,
@@ -70,19 +70,64 @@ export async function analyzeJournalWithZephyr(
   } catch (error) {
     console.error('Error calling Together.ai API:', error);
     
-    // Fallback response for errors
+    // Enhanced fallback response based on content analysis
+    const content = entry.content.toLowerCase();
+    let fallbackResponse = "";
+    let suggestions: string[] = [];
+    
+    // Analyze content for better personalized fallback
+    if (content.includes('anxiety') || content.includes('anxious') || content.includes('worried')) {
+      fallbackResponse = "I can sense you're experiencing some anxiety right now, and I want you to know that what you're feeling is completely valid. Anxiety can feel overwhelming, but you have the strength to work through this. Remember that you're not alone, and there are people who care about your wellbeing.";
+      suggestions = [
+        "Try the 4-7-8 breathing technique: breathe in for 4, hold for 7, exhale for 8",
+        "Practice grounding: name 5 things you can see, 4 you can hear, 3 you can touch",
+        "Consider reaching out to a trusted friend or campus counselor",
+        "Write down what's specifically worrying you to help organize your thoughts"
+      ];
+    } else if (content.includes('depress') || content.includes('sad') || content.includes('down')) {
+      fallbackResponse = "Thank you for sharing something so personal with me. Feeling sad or down is a natural part of the human experience, and it takes courage to acknowledge these feelings. Your emotions are valid, and it's okay to not be okay sometimes. You deserve support and care.";
+      suggestions = [
+        "Reach out to someone you trust - a friend, family member, or counselor",
+        "Try to engage in one small activity that usually brings you comfort",
+        "Remember that feelings are temporary, even when they feel overwhelming",
+        "Consider professional support if these feelings persist or worsen"
+      ];
+    } else if (content.includes('stress') || content.includes('overwhelm')) {
+      fallbackResponse = "It sounds like you're dealing with a lot right now, and feeling stressed or overwhelmed is your mind's way of telling you that you're carrying a heavy load. You're doing the best you can, and that's enough. Let's think about some ways to help lighten that burden.";
+      suggestions = [
+        "Break large tasks into smaller, more manageable steps",
+        "Prioritize what's most important and let go of what you can",
+        "Make sure you're getting enough sleep and eating regularly",
+        "Use campus resources like tutoring centers or counseling services"
+      ];
+    } else if (content.includes('anger') || content.includes('frustrated') || content.includes('mad')) {
+      fallbackResponse = "I hear that you're feeling angry or frustrated, and those are completely valid emotions. Sometimes anger is our mind's way of protecting us or signaling that something important to us feels threatened. Let's explore some healthy ways to work through these feelings.";
+      suggestions = [
+        "Take a few minutes to cool down before responding to the situation",
+        "Try physical exercise to help release the tension anger creates",
+        "Write down what's making you angry to better understand the root cause",
+        "Practice expressing your feelings in a constructive way when you're ready"
+      ];
+    } else {
+      fallbackResponse = "Thank you for sharing your thoughts with me. Whatever you're going through right now, I want you to know that your feelings are valid and important. You took a brave step by expressing what's on your mind, and that shows real strength and self-awareness.";
+      suggestions = [
+        "Continue checking in with yourself regularly through journaling",
+        "Maintain connections with supportive people in your life",
+        "Practice self-compassion and be gentle with yourself",
+        "Remember that seeking help is a sign of strength, not weakness"
+      ];
+    }
+    
     return {
-      response: "I'm here to listen and support you. While I'm experiencing some technical difficulties right now, please know that what you're feeling is valid and you're not alone. If you're in crisis, please reach out to your campus counseling center or call 988 for immediate support.",
-      confidence: 0.5,
-      suggestions: [
-        "Take slow, deep breaths",
-        "Reach out to a trusted friend or family member",
-        "Consider speaking with a counselor"
-      ],
+      response: fallbackResponse,
+      confidence: 0.75,
+      suggestions,
       resources: [
-        "Campus Counseling Center",
-        "Crisis Text Line: Text HOME to 741741",
-        "National Suicide Prevention Lifeline: 988"
+        "Campus Counseling Center - Free for students",
+        "Crisis Text Line - Text HOME to 741741",
+        "National Suicide Prevention Lifeline - Call 988",
+        "Student Health Services",
+        "Mental Health America - mhanational.org"
       ]
     };
   }

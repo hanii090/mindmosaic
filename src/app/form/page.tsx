@@ -42,7 +42,13 @@ export default function FormPage() {
         const result = await submitJournalEntry(formData);
         
         if (result.success) {
-          // Sync to localStorage for offline access
+          // Store data in sessionStorage for the result page
+          sessionStorage.setItem('mindmosaic_response', JSON.stringify(result.aiResponse));
+          sessionStorage.setItem('mindmosaic_emotions', JSON.stringify(result.emotionAnalysis));
+          sessionStorage.setItem('mindmosaic_user_input', sanitizedContent);
+          sessionStorage.setItem('mindmosaic_session', result.sessionId);
+          
+          // Also sync to localStorage for offline access
           syncCurrentSession(
             result.sessionId,
             sanitizedContent,

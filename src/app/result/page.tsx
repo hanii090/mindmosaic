@@ -2,7 +2,7 @@
 
 import { useEffect, useState, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
-import { Brain, Heart, ArrowLeft, RefreshCw, Save, BookOpen } from 'lucide-react';
+import { Brain, Heart, ArrowLeft, RefreshCw, Save, BookOpen, AlertCircle } from 'lucide-react';
 import Link from 'next/link';
 import { Textarea } from '@/components/ui/textarea';
 import { ResultCard } from '@/components/EntryCard';
@@ -215,6 +215,12 @@ function ResultContent() {
         aiResponse: storedResponse ? JSON.parse(storedResponse) : undefined,
         emotionAnalysis: storedEmotions ? JSON.parse(storedEmotions) : undefined,
       };
+      
+      if (!data.aiResponse && !data.emotionAnalysis) {
+        setError('No analysis data found. Please try submitting your entry again.');
+        setIsLoading(false);
+        return;
+      }
 
       setResultData(data);
       setIsLoading(false);
@@ -348,110 +354,170 @@ function ResultContent() {
 
           <div className="max-w-4xl mx-auto space-y-8">
             
-            {/* Emotion Analysis */}
-            {emotionAnalysis && (
-              <ResultCard>
-                <div className="space-y-6">
-                  <div className="flex items-center space-x-3">
-                    <Brain className="h-6 w-6 text-mind-accent" />
-                    <h2 className="text-xl font-semibold text-white">Emotional Insights</h2>
-                  </div>
-                  
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div className="space-y-4">
-                      <h3 className="font-medium text-white">Primary Emotion Detected</h3>
+            {/* Always show at least one of these sections */}
+            {(aiResponse || emotionAnalysis) ? (
+              <>
+                {/* Emotion Analysis */}
+                {emotionAnalysis ? (
+                  <ResultCard>
+                    <div className="space-y-6">
                       <div className="flex items-center space-x-3">
-                        <EmotionIcon 
-                          emotion={emotionAnalysis.primaryEmotion}
-                          icon="🤔"
-                          size="lg"
-                          showLabel={true}
-                        />
+                        <Brain className="h-6 w-6 text-mind-accent" />
+                        <h2 className="text-xl font-semibold text-white">Emotional Insights</h2>
                       </div>
                       
-                      <div className="space-y-2">
-                        <div className="flex justify-between text-sm">
-                          <span className="text-white/70">Emotional State:</span>
-                          <span className="text-mind-accent capitalize">{emotionAnalysis.emotionalState}</span>
-                        </div>
-                        <div className="flex justify-between text-sm">
-                          <span className="text-white/70">Sentiment:</span>
-                          <span className={`capitalize ${
-                            emotionAnalysis.sentiment === 'positive' ? 'text-green-400' :
-                            emotionAnalysis.sentiment === 'negative' ? 'text-red-400' :
-                            'text-yellow-400'
-                          }`}>
-                            {emotionAnalysis.sentiment}
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-                    
-                    <div className="space-y-4">
-                      <h3 className="font-medium text-white">All Emotions Detected</h3>
-                      <div className="grid grid-cols-2 gap-2">
-                        {emotionAnalysis.emotions.slice(0, 6).map((emotion, index) => (
-                          <div key={index} className="flex items-center justify-between p-2 rounded-lg bg-white/5">
-                            <span className="text-sm text-white/80 capitalize">{emotion.emotion}</span>
-                            <span className="text-xs text-mind-accent">{Math.round(emotion.confidence * 100)}%</span>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div className="space-y-4">
+                          <h3 className="font-medium text-white">Primary Emotion Detected</h3>
+                          <div className="flex items-center space-x-3">
+                            <EmotionIcon 
+                              emotion={emotionAnalysis.primaryEmotion}
+                              icon="🤔"
+                              size="lg"
+                              showLabel={true}
+                            />
                           </div>
-                        ))}
+                          
+                          <div className="space-y-2">
+                            <div className="flex justify-between text-sm">
+                              <span className="text-white/70">Emotional State:</span>
+                              <span className="text-mind-accent capitalize">{emotionAnalysis.emotionalState}</span>
+                            </div>
+                            <div className="flex justify-between text-sm">
+                              <span className="text-white/70">Sentiment:</span>
+                              <span className={`capitalize ${
+                                emotionAnalysis.sentiment === 'positive' ? 'text-green-400' :
+                                emotionAnalysis.sentiment === 'negative' ? 'text-red-400' :
+                                'text-yellow-400'
+                              }`}>
+                                {emotionAnalysis.sentiment}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                        
+                        <div className="space-y-4">
+                          <h3 className="font-medium text-white">All Emotions Detected</h3>
+                          <div className="grid grid-cols-2 gap-2">
+                            {emotionAnalysis.emotions && emotionAnalysis.emotions.slice(0, 6).map((emotion, index) => (
+                              <div key={index} className="flex items-center justify-between p-2 rounded-lg bg-white/5">
+                                <span className="text-sm text-white/80 capitalize">{emotion.emotion}</span>
+                                <span className="text-xs text-mind-accent">{Math.round(emotion.confidence * 100)}%</span>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                </div>
-              </ResultCard>
-            )}
+                  </ResultCard>
+                ) : (
+                  <ResultCard>
+                    <div className="text-center py-6">
+                      <div className="w-12 h-12 mx-auto rounded-full bg-blue-500/20 border border-blue-500/30 flex items-center justify-center mb-3">
+                        <Brain className="h-6 w-6 text-blue-400" />
+                      </div>
+                      <h3 className="text-lg font-semibold text-white mb-2">Emotion Analysis Processing</h3>
+                      <p className="text-white/70 text-sm">
+                        We&apos;re still working on analyzing your emotional state. Your feelings are valid regardless.
+                      </p>
+                    </div>
+                  </ResultCard>
+                )}
 
-            {/* AI Response */}
-            {aiResponse && (
+                {/* AI Response */}
+                {aiResponse ? (
+                  <ResultCard>
+                    <div className="space-y-6">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center space-x-3">
+                          <Heart className="h-6 w-6 text-mind-accent" />
+                          <h2 className="text-xl font-semibold text-white">AI Companion Response</h2>
+                        </div>
+                        <div className="text-sm text-white/60">
+                          Confidence: {Math.round(aiResponse.confidence * 100)}%
+                        </div>
+                      </div>
+                      
+                      <div className="prose prose-invert max-w-none">
+                        <p className="text-white/90 leading-relaxed text-lg">
+                          {aiResponse.response}
+                        </p>
+                      </div>
+
+                      {/* Suggestions */}
+                      {aiResponse.suggestions && aiResponse.suggestions.length > 0 && (
+                        <div className="space-y-4">
+                          <h3 className="font-medium text-white">Coping Strategies</h3>
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                            {aiResponse.suggestions.map((suggestion, index) => (
+                              <div key={index} className="flex items-start space-x-3 p-3 rounded-lg bg-mind-yellow/5 border border-mind-yellow/20">
+                                <span className="text-mind-accent font-bold">•</span>
+                                <span className="text-white/80 text-sm">{suggestion}</span>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Resources */}
+                      {aiResponse.resources && aiResponse.resources.length > 0 && (
+                        <div className="space-y-4">
+                          <h3 className="font-medium text-white">Helpful Resources</h3>
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                            {aiResponse.resources.map((resource, index) => (
+                              <div key={index} className="flex items-center space-x-3 p-3 rounded-lg bg-mind-orange/5 border border-mind-orange/20">
+                                <span className="text-mind-accent">🔗</span>
+                                <span className="text-white/80 text-sm">{resource}</span>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </ResultCard>
+                ) : (
+                  <ResultCard>
+                    <div className="text-center py-8">
+                      <div className="w-16 h-16 mx-auto rounded-full bg-yellow-500/20 border border-yellow-500/30 flex items-center justify-center mb-4">
+                        <Brain className="h-8 w-8 text-yellow-400" />
+                      </div>
+                      <h3 className="text-xl font-semibold text-white mb-2">Analysis Not Available</h3>
+                      <p className="text-white/70 mb-4">
+                        We&apos;re experiencing some technical difficulties with the AI analysis. 
+                        Please try submitting your entry again.
+                      </p>
+                      <Link 
+                        href="/form"
+                        className="inline-flex items-center px-6 py-3 bg-gradient-to-r from-mind-yellow/30 to-mind-orange/30 border border-mind-accent/50 text-white hover:from-mind-yellow/40 hover:to-mind-orange/40 rounded-xl transition-all duration-200"
+                      >
+                        Try Again
+                      </Link>
+                    </div>
+                  </ResultCard>
+                )}
+              </>
+            ) : (
               <ResultCard>
-                <div className="space-y-6">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center space-x-3">
-                      <Heart className="h-6 w-6 text-mind-accent" />
-                      <h2 className="text-xl font-semibold text-white">AI Companion Response</h2>
-                    </div>
-                    <div className="text-sm text-white/60">
-                      Confidence: {Math.round(aiResponse.confidence * 100)}%
-                    </div>
+                <div className="text-center py-12">
+                  <div className="w-20 h-20 mx-auto rounded-full bg-red-500/20 border border-red-500/30 flex items-center justify-center mb-6">
+                    <AlertCircle className="h-10 w-10 text-red-400" />
                   </div>
-                  
-                  <div className="prose prose-invert max-w-none">
-                    <p className="text-white/90 leading-relaxed text-lg">
-                      {aiResponse.response}
+                  <h3 className="text-2xl font-semibold text-white mb-4">Analysis Temporarily Unavailable</h3>
+                  <p className="text-white/70 mb-6 max-w-md mx-auto">
+                    We&apos;re currently experiencing technical difficulties with our AI analysis service. 
+                    Your submission was received, but we cannot provide personalized insights right now.
+                  </p>
+                  <div className="space-y-4">
+                    <p className="text-white/80 text-sm">
+                      In the meantime, remember that what you&apos;re feeling is valid, and seeking support is always a sign of strength.
                     </p>
+                    <Link 
+                      href="/form"
+                      className="inline-flex items-center px-6 py-3 bg-gradient-to-r from-mind-yellow/30 to-mind-orange/30 border border-mind-accent/50 text-white hover:from-mind-yellow/40 hover:to-mind-orange/40 rounded-xl transition-all duration-200"
+                    >
+                      Try Again
+                    </Link>
                   </div>
-
-                  {/* Suggestions */}
-                  {aiResponse.suggestions.length > 0 && (
-                    <div className="space-y-4">
-                      <h3 className="font-medium text-white">Coping Strategies</h3>
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                        {aiResponse.suggestions.map((suggestion, index) => (
-                          <div key={index} className="flex items-start space-x-3 p-3 rounded-lg bg-mind-yellow/5 border border-mind-yellow/20">
-                            <span className="text-mind-accent font-bold">•</span>
-                            <span className="text-white/80 text-sm">{suggestion}</span>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Resources */}
-                  {aiResponse.resources.length > 0 && (
-                    <div className="space-y-4">
-                      <h3 className="font-medium text-white">Helpful Resources</h3>
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                        {aiResponse.resources.map((resource, index) => (
-                          <div key={index} className="flex items-center space-x-3 p-3 rounded-lg bg-mind-orange/5 border border-mind-orange/20">
-                            <span className="text-mind-accent">🔗</span>
-                            <span className="text-white/80 text-sm">{resource}</span>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
                 </div>
               </ResultCard>
             )}

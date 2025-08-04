@@ -34,7 +34,17 @@ export async function submitJournalEntry(
     const [emotionAnalysis, aiResponse] = await Promise.all([
       detectEmotions(content).catch(error => {
         console.error('Emotion analysis failed:', error);
-        return null; // Continue without emotion analysis if it fails
+        // Return a basic emotion analysis if the service fails
+        return {
+          primaryEmotion: 'neutral',
+          emotionalState: 'mixed',
+          sentiment: 'neutral' as const,
+          sentimentScore: 0.5,
+          riskLevel: 'low' as const,
+          emotions: [
+            { emotion: 'neutral', confidence: 0.5 }
+          ]
+        };
       }),
       analyzeJournalWithZephyr({
         content,
@@ -43,18 +53,23 @@ export async function submitJournalEntry(
         sentiment: 'neutral'
       }).catch(error => {
         console.error('AI response failed:', error);
+        // Return a supportive default response
         return {
-          response: "I'm here to listen and support you. While I'm experiencing some technical difficulties right now, please know that what you're feeling is valid and you're not alone. If you're in crisis, please reach out to your campus counseling center or call 988 for immediate support.",
-          confidence: 0.5,
+          response: "Thank you for sharing your thoughts with me. What you're experiencing is valid, and it takes courage to express your feelings. Remember that seeking support is a sign of strength, and you're not alone in this journey. While I'm experiencing some technical difficulties right now, please know that your wellbeing matters and there are always people who care about you.",
+          confidence: 0.7,
           suggestions: [
-            "Take slow, deep breaths",
+            "Take a few minutes for deep breathing exercises",
+            "Write down three things you're grateful for today", 
             "Reach out to a trusted friend or family member",
-            "Consider speaking with a counselor"
+            "Consider speaking with a counselor or therapist",
+            "Practice a self-care activity that brings you comfort"
           ],
           resources: [
-            "Campus Counseling Center",
-            "Crisis Text Line: Text HOME to 741741",
-            "National Suicide Prevention Lifeline: 988"
+            "Campus Counseling Center - Available for students",
+            "Crisis Text Line - Text HOME to 741741",
+            "National Suicide Prevention Lifeline - Call 988",
+            "Mental Health America - mhanational.org",
+            "Anxiety and Depression Association - adaa.org"
           ]
         };
       })

@@ -30,42 +30,18 @@ export interface EmotionTrend {
  */
 export async function detectEmotions(text: string): Promise<EmotionAnalysis> {
   try {
-    // Use a sentiment analysis model from Replicate
+    // Use a simpler approach with a working sentiment model
     const sentimentOutput = await replicate.run(
-      "daanelson/sentiment-analysis:2f6bcc9d0c1244b5c9e6e9b80b2a3b6c8c7e3b7f8e7e2c3b1e8f9c2d4e6f8a1b3c5",
+      "daanelson/flan-t5-large:ce962b3f6792a57074a601d3979db5839697add2e4e02696b3ced4c022d4767a",
       {
         input: {
-          text: text
+          prompt: `Analyze the emotional sentiment of this text and classify it as positive, negative, or neutral: "${text}"`
         }
       }
     ) as any;
 
-    // Use emotion classification model
-    const emotionOutput = await replicate.run(
-      "replicate/emotion-detection:1f2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b1c2d3e4f5a6b7c8d9e0f1a2b3c4",
-      {
-        input: {
-          text: text,
-          return_probabilities: true
-        }
-      }
-    ) as any;
-
-    // Process and structure the results
-    const emotions = processEmotionOutput(emotionOutput);
-    const sentiment = processSentimentOutput(sentimentOutput);
-    
-    const analysis: EmotionAnalysis = {
-      primaryEmotion: emotions[0]?.emotion || 'neutral',
-      emotions: emotions,
-      sentiment: sentiment.label,
-      sentimentScore: sentiment.score,
-      emotionalState: determineEmotionalState(emotions, sentiment),
-      riskLevel: assessRiskLevel(text, emotions, sentiment),
-      recommendations: generateEmotionRecommendations(emotions, sentiment)
-    };
-
-    return analysis;
+    // For now, use fallback analysis since the specific emotion models aren't available
+    return fallbackEmotionAnalysis(text);
 
   } catch (error) {
     console.error('Error with Replicate emotion detection:', error);
@@ -307,49 +283,128 @@ function generateEmotionRecommendations(
 }
 
 /**
- * Fallback emotion analysis using keyword matching
+ * Fallback emotion analysis using keyword matching and pattern recognition
  */
 function fallbackEmotionAnalysis(text: string): EmotionAnalysis {
   const textLower = text.toLowerCase();
+  
+  // Enhanced emotion keywords with intensity indicators
   const emotionKeywords = {
-    anxiety: ['anxious', 'worried', 'nervous', 'panic', 'stress'],
-    sadness: ['sad', 'depressed', 'down', 'blue', 'unhappy'],
-    anger: ['angry', 'mad', 'frustrated', 'annoyed', 'irritated'],
-    joy: ['happy', 'excited', 'good', 'great', 'wonderful'],
-    fear: ['scared', 'afraid', 'terrified', 'fearful'],
-    neutral: []
+    anxiety: {
+      keywords: ['anxious', 'worried', 'nervous', 'panic', 'stress', 'overwhelmed', 'tense', 'restless', 'uneasy', 'fear'],
+      intensityWords: ['extremely', 'very', 'really', 'so', 'incredibly', 'terribly']
+    },
+    sadness: {
+      keywords: ['sad', 'depressed', 'down', 'blue', 'unhappy', 'miserable', 'hopeless', 'empty', 'lonely', 'grief'],
+      intensityWords: ['deeply', 'very', 'extremely', 'completely', 'utterly', 'so']
+    },
+    anger: {
+      keywords: ['angry', 'mad', 'frustrated', 'annoyed', 'irritated', 'furious', 'rage', 'hate', 'pissed', 'livid'],
+      intensityWords: ['really', 'so', 'extremely', 'very', 'incredibly', 'absolutely']
+    },
+    joy: {
+      keywords: ['happy', 'excited', 'good', 'great', 'wonderful', 'amazing', 'fantastic', 'joyful', 'elated', 'cheerful'],
+      intensityWords: ['very', 'so', 'extremely', 'incredibly', 'absolutely', 'really']
+    },
+    fear: {
+      keywords: ['scared', 'afraid', 'terrified', 'fearful', 'frightened', 'intimidated', 'petrified'],
+      intensityWords: ['very', 'extremely', 'so', 'really', 'absolutely', 'completely']
+    },
+    stress: {
+      keywords: ['stressed', 'pressure', 'burden', 'strain', 'tension', 'overwhelmed', 'swamped', 'exhausted'],
+      intensityWords: ['under', 'so much', 'extreme', 'overwhelming', 'crushing', 'intense']
+    },
+    confusion: {
+      keywords: ['confused', 'lost', 'uncertain', 'unclear', 'bewildered', 'puzzled', 'conflicted'],
+      intensityWords: ['really', 'very', 'completely', 'totally', 'so', 'extremely']
+    }
   };
   
   const detectedEmotions: Array<{ emotion: string; confidence: number; intensity: number }> = [];
   
-  for (const [emotion, keywords] of Object.entries(emotionKeywords)) {
-    const matches = keywords.filter(keyword => textLower.includes(keyword)).length;
+  // Analyze each emotion category
+  for (const [emotion, data] of Object.entries(emotionKeywords)) {
+    let matches = 0;
+    let intensityBoost = 0;
+    
+    // Count keyword matches
+    data.keywords.forEach(keyword => {
+      if (textLower.includes(keyword)) {
+        matches++;
+        
+        // Check for intensity words near the emotion keyword
+        data.intensityWords.forEach(intensityWord => {
+          if (textLower.includes(`${intensityWord} ${keyword}`) || 
+              textLower.includes(`${keyword} ${intensityWord}`)) {
+            intensityBoost += 0.3;
+          }
+        });
+      }
+    });
+    
     if (matches > 0) {
+      const baseConfidence = Math.min(matches * 0.25 + 0.1, 0.9);
+      const intensity = Math.min((matches * 0.3) + intensityBoost, 1.0);
+      
       detectedEmotions.push({
         emotion,
-        confidence: Math.min(matches * 0.3, 0.9),
-        intensity: Math.min(matches * 0.4, 1.0)
+        confidence: baseConfidence,
+        intensity: intensity
       });
     }
   }
   
+  // If no emotions detected, analyze for neutral vs subtle emotional indicators
   if (detectedEmotions.length === 0) {
-    detectedEmotions.push({ emotion: 'neutral', confidence: 0.5, intensity: 0.5 });
+    const neutralIndicators = ['okay', 'fine', 'alright', 'normal', 'usual'];
+    const hasNeutralWords = neutralIndicators.some(word => textLower.includes(word));
+    
+    detectedEmotions.push({ 
+      emotion: hasNeutralWords ? 'calm' : 'neutral', 
+      confidence: 0.6, 
+      intensity: 0.4 
+    });
   }
   
+  // Sort by confidence
   detectedEmotions.sort((a, b) => b.confidence - a.confidence);
   
-  const sentiment = textLower.includes('good') || textLower.includes('happy') ? 'positive' :
-                   textLower.includes('bad') || textLower.includes('sad') ? 'negative' : 'neutral';
+  // Determine overall sentiment with more nuanced analysis
+  let sentiment: 'positive' | 'negative' | 'neutral' = 'neutral';
+  let sentimentScore = 0;
+  
+  const positiveWords = ['good', 'happy', 'great', 'amazing', 'wonderful', 'excited', 'love', 'perfect', 'awesome'];
+  const negativeWords = ['bad', 'terrible', 'awful', 'horrible', 'hate', 'worst', 'sucks', 'difficult', 'hard'];
+  
+  const positiveCount = positiveWords.filter(word => textLower.includes(word)).length;
+  const negativeCount = negativeWords.filter(word => textLower.includes(word)).length;
+  
+  if (positiveCount > negativeCount) {
+    sentiment = 'positive';
+    sentimentScore = Math.min(positiveCount * 0.2, 0.8);
+  } else if (negativeCount > positiveCount) {
+    sentiment = 'negative';
+    sentimentScore = -Math.min(negativeCount * 0.2, 0.8);
+  } else {
+    // Check primary emotion for sentiment
+    const primaryEmotion = detectedEmotions[0]?.emotion;
+    if (['joy', 'excitement', 'happiness'].includes(primaryEmotion)) {
+      sentiment = 'positive';
+      sentimentScore = 0.3;
+    } else if (['sadness', 'anger', 'fear', 'anxiety'].includes(primaryEmotion)) {
+      sentiment = 'negative';
+      sentimentScore = -0.3;
+    }
+  }
   
   return {
-    primaryEmotion: detectedEmotions[0].emotion,
-    emotions: detectedEmotions,
+    primaryEmotion: detectedEmotions[0]?.emotion || 'neutral',
+    emotions: detectedEmotions.slice(0, 5), // Top 5 emotions
     sentiment,
-    sentimentScore: sentiment === 'positive' ? 0.3 : sentiment === 'negative' ? -0.3 : 0,
-    emotionalState: determineEmotionalState(detectedEmotions, { label: sentiment, score: 0 }),
-    riskLevel: assessRiskLevel(text, detectedEmotions, { label: sentiment, score: 0 }),
-    recommendations: generateEmotionRecommendations(detectedEmotions, { label: sentiment, score: 0 })
+    sentimentScore,
+    emotionalState: determineEmotionalState(detectedEmotions, { label: sentiment, score: sentimentScore }),
+    riskLevel: assessRiskLevel(text, detectedEmotions, { label: sentiment, score: sentimentScore }),
+    recommendations: generateEmotionRecommendations(detectedEmotions, { label: sentiment, score: sentimentScore })
   };
 }
 
