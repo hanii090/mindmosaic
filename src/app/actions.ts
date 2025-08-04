@@ -42,9 +42,14 @@ export async function submitJournalEntry(
           sentimentScore: 0.5,
           riskLevel: 'low' as const,
           emotions: [
-            { emotion: 'neutral', confidence: 0.5 }
+            { emotion: 'neutral', confidence: 0.5, intensity: 0.5 }
+          ],
+          recommendations: [
+            "Take some time to reflect on your feelings",
+            "Consider reaching out to someone you trust",
+            "Practice mindfulness or relaxation techniques"
           ]
-        };
+        } as EmotionAnalysis;
       }),
       analyzeJournalWithZephyr({
         content,
@@ -102,7 +107,7 @@ export async function submitJournalEntry(
       success: true,
       sessionId,
       aiResponse,
-      emotionAnalysis: emotionAnalysis || undefined
+      emotionAnalysis
     };
 
   } catch (error) {
