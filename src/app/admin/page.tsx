@@ -3,7 +3,6 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { Button } from '@/components/ui/button';
 import { 
   BarChart3, 
   Users, 
@@ -126,21 +125,20 @@ export default function AdminDashboard() {
           </div>
           
           <div className="flex items-center space-x-4 mt-4 md:mt-0">
-            <Button
+            <button
               onClick={() => exportData('analytics')}
-              className="bg-white/10 border border-white/20 hover:bg-white/20 text-white"
+              className="bg-white/10 border border-white/20 hover:bg-white/20 text-white px-4 py-2 rounded-xl flex items-center space-x-2 transition-colors"
             >
-              <Download className="h-4 w-4 mr-2" />
-              Export Data
-            </Button>
-            <Button
+              <Download className="h-4 w-4" />
+              <span>Export Data</span>
+            </button>
+            <button
               onClick={handleLogout}
-              variant="outline"
-              className="border-red-500/50 text-red-400 hover:bg-red-500/10"
+              className="border border-red-500/50 text-red-400 hover:bg-red-500/10 px-4 py-2 rounded-xl flex items-center space-x-2 transition-colors"
             >
-              <LogOut className="h-4 w-4 mr-2" />
-              Logout
-            </Button>
+              <LogOut className="h-4 w-4" />
+              <span>Logout</span>
+            </button>
           </div>
         </div>
 

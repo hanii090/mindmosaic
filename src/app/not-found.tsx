@@ -1,5 +1,4 @@
 import Link from 'next/link';
-import { Button } from '@/components/ui/button';
 import { Home, ArrowLeft } from 'lucide-react';
 
 export default function NotFound() {
@@ -26,11 +25,12 @@ export default function NotFound() {
 
           {/* Action Buttons */}
           <div className="space-y-4">
-            <Link href="/">
-              <Button className="w-full bg-gradient-to-r from-blue-500/30 to-purple-500/30 border border-blue-500/50 hover:from-blue-500/40 hover:to-purple-500/40 text-white font-medium py-3 rounded-xl transition-all duration-200">
-                <Home className="h-4 w-4 mr-2" />
-                Back to Home
-              </Button>
+            <Link 
+              href="/"
+              className="w-full bg-gradient-to-r from-blue-500/30 to-purple-500/30 border border-blue-500/50 hover:from-blue-500/40 hover:to-purple-500/40 text-white font-medium py-3 rounded-xl transition-all duration-200 flex items-center justify-center"
+            >
+              <Home className="h-4 w-4 mr-2" />
+              Back to Home
             </Link>
             
             <button 

@@ -3,7 +3,6 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { Button } from '@/components/ui/button';
 import { Eye, EyeOff, Shield, Lock } from 'lucide-react';
 
 export default function AdminLoginPage() {
@@ -109,23 +108,23 @@ export default function AdminLoginPage() {
               </div>
 
               {/* Submit Button */}
-              <Button
+              <button
                 type="submit"
                 disabled={isLoading || !email || !password}
-                className="w-full bg-gradient-to-r from-red-500/30 to-orange-500/30 border border-red-500/50 hover:from-red-500/40 hover:to-orange-500/40 text-white font-medium py-3 rounded-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full bg-gradient-to-r from-red-500/30 to-orange-500/30 border border-red-500/50 hover:from-red-500/40 hover:to-orange-500/40 text-white font-medium py-3 rounded-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2"
               >
                 {isLoading ? (
-                  <div className="flex items-center space-x-2">
+                  <>
                     <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
                     <span>Authenticating...</span>
-                  </div>
+                  </>
                 ) : (
-                  <div className="flex items-center space-x-2">
+                  <>
                     <Lock className="h-4 w-4" />
                     <span>Access Dashboard</span>
-                  </div>
+                  </>
                 )}
-              </Button>
+              </button>
             </form>
 
             {/* Security Notice */}
